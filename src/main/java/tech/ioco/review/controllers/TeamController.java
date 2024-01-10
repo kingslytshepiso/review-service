@@ -24,8 +24,8 @@ import tech.ioco.review.entity.Team;
 // The request will identify the user with the right
 // previleges to process the request
 @RestController
-@RequestMapping("/groups")
-public class GroupController {
+@RequestMapping("/teams")
+public class TeamController {
 
     @Autowired
     private TeamRepository repo;
@@ -37,36 +37,36 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<Void> createGroup(@RequestBody Team model,
-            UriComponentsBuilder ucb) {
-        Boolean groupExists = repo.existsByName(model.getName()) || repo.existsById(model.getId());
-        if (!groupExists) {
+                                            UriComponentsBuilder ucb) {
+        Boolean teamExists = repo.existsByName(model.getName()) && repo.existsById(model.getId());
+        if (!teamExists) {
             Team newGroup = repo.save(model);
-            URI groupLocation = ucb.path("groups/{groupId}")
+            URI groupLocation = ucb.path("teams/{teamId}")
                     .buildAndExpand(newGroup.getId()).toUri();
             return ResponseEntity.created(groupLocation).build();
         } else {
             // The below code assumes that the frontend client will use and
             // provide the necessary information to let the user know of an
-            // existing group
+            // existing team
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 
-    @GetMapping("/{groupId}")
-    public ResponseEntity<Team> getGroup(@PathVariable("groupId") UUID id) {
-        Optional<Team> group = repo.findById(id);
-        if (group.isPresent()) {
-            return ResponseEntity.ok(group.get());
+    @GetMapping("/{teamId}")
+    public ResponseEntity<Team> getTeam(@PathVariable("teamId") UUID id) {
+        Optional<Team> team = repo.findById(id);
+        if (team.isPresent()) {
+            return ResponseEntity.ok(team.get());
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @PutMapping("/{groupId}")
-    public ResponseEntity<Void> updateGroup(@PathVariable("groupId") UUID id,
-            @RequestBody Team model) {
-        Boolean groupExists = repo.existsById(id);
-        if (groupExists) {
+    @PutMapping("/{teamId}")
+    public ResponseEntity<Void> updateGroup(@PathVariable("teamId") UUID id,
+                                            @RequestBody Team model) {
+        Boolean teamExists = repo.existsById(id);
+        if (teamExists) {
             repo.save(model);
             // return ResponseEntity.noContent().build();
             return ResponseEntity.ok().build();
@@ -75,8 +75,8 @@ public class GroupController {
         }
     }
 
-    @DeleteMapping("/{groupId}")
-    public ResponseEntity<Void> deleteGroup(@PathVariable("groupId") UUID id) {
+    @DeleteMapping("/{teamId}")
+    public ResponseEntity<Void> deleteTeam(@PathVariable("teamId") UUID id) {
         repo.deleteById(id);
         // return ResponseEntity.noContent().build();
         return ResponseEntity.noContent().build();
