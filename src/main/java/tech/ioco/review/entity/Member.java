@@ -1,5 +1,6 @@
 package tech.ioco.review.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -20,8 +21,14 @@ public class Member implements Serializable {
     private String surname;
     @Basic(optional = false)
     private String email;
+    /*Assumptions: When requesting a team, information about
+    the team's members should be included, but information
+    about teams should not be included when requesting a member
+    */
+    @JsonIgnore
     @ManyToMany(mappedBy = "members")
     private Set<Team> teams;
+
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     @ManyToOne
     private Role role;

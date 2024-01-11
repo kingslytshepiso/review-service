@@ -21,18 +21,18 @@ public class Team implements Serializable {
     @Column(name = "reviewer")
     private boolean isReviewer;
     @JoinTable(name = "team_review", joinColumns = {
-            @JoinColumn(name = "team_id", referencedColumnName = "id") }, inverseJoinColumns = {
-                    @JoinColumn(name = "review_id", referencedColumnName = "id") })
+            @JoinColumn(name = "team_id", referencedColumnName = "id")}, inverseJoinColumns = {
+            @JoinColumn(name = "review_id", referencedColumnName = "id")})
     @ManyToMany
     private Set<Review> reviews;
-    @JoinTable(name = "team_member", joinColumns = {
-            @JoinColumn(name = "team_id", referencedColumnName = "id") }, inverseJoinColumns = {
-                    @JoinColumn(name = "member_id", referencedColumnName = "id") })
     @ManyToMany
+    @JoinTable(name = "team_member", joinColumns = {
+            @JoinColumn(name = "team_id", referencedColumnName = "id")}, inverseJoinColumns = {
+            @JoinColumn(name = "member_id", referencedColumnName = "id")})
     private Set<Member> members;
     @JoinTable(name = "team_stakeholder", joinColumns = {
-            @JoinColumn(name = "team_id", referencedColumnName = "id") }, inverseJoinColumns = {
-                    @JoinColumn(name = "stakeholder_id", referencedColumnName = "id") })
+            @JoinColumn(name = "team_id", referencedColumnName = "id")}, inverseJoinColumns = {
+            @JoinColumn(name = "stakeholder_id", referencedColumnName = "id")})
     @ManyToMany
     private Set<Stakeholder> stakeholders;
 

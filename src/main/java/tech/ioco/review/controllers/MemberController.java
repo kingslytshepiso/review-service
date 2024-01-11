@@ -12,10 +12,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -25,7 +23,7 @@ import tech.ioco.review.entity.Team;
 import tech.ioco.review.entity.Member;
 
 @RestController
-@RequestMapping("/groups/{groupId}/members")
+@RequestMapping("/teams/{teamId}/members")
 public class MemberController {
     @Autowired
     private TeamRepository teamRepo;
@@ -35,64 +33,76 @@ public class MemberController {
 
     @GetMapping
     public ResponseEntity<Set<Member>> geAllMembers(
-            @PathVariable("groupdId") UUID groupId) {
-        Optional<Team> group = teamRepo.findById(groupId);
-        if (group.isPresent()) {
-            return ResponseEntity.ok(group.get().getMembers());
+            @PathVariable("teamId") UUID groupId) {
+        Optional<Team> team = teamRepo.findById(groupId);
+        if (team.isPresent()) {
+            return ResponseEntity.ok(team.get().getMembers());
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
     @PostMapping
-    public ResponseEntity<Void> createMember(@RequestBody UUID userId,
-            @PathVariable("groupId") UUID groupId,
-            @RequestParam("memberId") UUID memberId,
-            UriComponentsBuilder ucb) {
-        Optional<Team> group = teamRepo.findById(memberId);
-        Boolean memberExists = memberRepo.existsById(memberId);
-        if (group.isPresent() && memberExists) {
-            Optional<Member> member = memberRepo.findById(memberId);
-            group.get().addMember(member.get());
-            URI groupLocation = ucb.path("groups/{groupId}/members")
-                    .buildAndExpand(group.get().getId()).toUri();
+    public ResponseEntity<Void> createMember(@PathVariable("teamId") UUID teamId,
+                                             @RequestBody Member model,
+                                             UriComponentsBuilder ucb) {
+        Optional<Team> team = teamRepo.findById(teamId);
+        Boolean memberExists = memberRepo.existsById(model.getId());
+        if (team.isPresent() && memberExists) {
+            Optional<Member> member = memberRepo.findById(model.getId());
+            team.get().addMember(member.get());
+            teamRepo.save(team.get());
+            URI groupLocation = ucb.path("teams/{teamsId}/members/{memberId}")
+                    .buildAndExpand(team.get().getId(), member.get().getId()).toUri();
             return ResponseEntity.created(groupLocation).build();
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 
+    /*
+    Assumption: The search for a member is specific to the group
+    specified by the request
+    * */
     @GetMapping("/{memberId}")
-    public ResponseEntity<Member> getMember(@PathVariable("memberId") UUID id) {
-        Optional<Member> member = memberRepo.findById(id);
-        if (member.isPresent()) {
-            return ResponseEntity.ok(member.get());
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<Member> getMember(
+            @PathVariable("teamId") UUID teamId,
+            @PathVariable("memberId") UUID memberId) {
+        /*
+        Both team and member should exist, otherwise return 404;
+        */
+        Optional<Team> team = teamRepo.findById(teamId);
+        if (team.isPresent()) {
+            Optional<Member> optionalMember = memberRepo.findById(memberId);
+            Boolean teamContainsMember = optionalMember.isPresent() ?
+                    team.get().getMembers().contains(optionalMember.get())
+                    : false;
+            if (teamContainsMember) {
+                return ResponseEntity.ok(optionalMember.get());
+            }
         }
-    }
-
-    // The following request endpoint assumes that this
-    // process involves updating a member and there
-    // is no connection to the group during the update
-    @PutMapping("/{memberId}")
-    public ResponseEntity<Void> updateMember(@PathVariable("memberId") UUID id,
-            @RequestBody Member model) {
-        Optional<Member> member = memberRepo.findById(id);
-        if (member.isPresent()) {
-            model.setId(id);
-            memberRepo.save(model);
-            // return ResponseEntity.noContent().build();
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{memberId}")
-    public ResponseEntity<Void> deleteMember(@PathVariable("memberId") UUID id) {
-        memberRepo.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deleteMember(
+            @PathVariable("teamId") UUID teamId,
+            @PathVariable("memberId") UUID memberId
+    ) {
+        Optional<Team> teamOptional = teamRepo.findById(teamId);
+        if (teamOptional.isPresent()) {
+            Team team = teamOptional.get();
+            Set<Member> teamMembers = team.getMembers();
+            Optional<Member> toDelete = memberRepo.findById(memberId);
+            if (toDelete.isPresent()) {
+                teamMembers.remove(toDelete.get());
+                team.setMembers(teamMembers);
+                teamRepo.save(team);
+                return ResponseEntity.noContent().build();
+            }
+//            return ResponseEntity.status(HttpStatus.GONE).build();
+        }
+        return ResponseEntity.notFound().build();
     }
 
 }

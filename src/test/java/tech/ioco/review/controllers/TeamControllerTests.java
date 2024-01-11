@@ -1,7 +1,6 @@
 package tech.ioco.review.controllers;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -10,6 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.test.annotation.DirtiesContext;
 import tech.ioco.review.data.TeamRepository;
 import tech.ioco.review.entity.Team;
 
@@ -20,6 +20,9 @@ import java.util.UUID;
 import org.assertj.core.api.Assertions;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DirtiesContext
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TeamControllerTests {
 
     TestRestTemplate restTemplate = new TestRestTemplate();
@@ -37,6 +40,7 @@ public class TeamControllerTests {
     }
 
     @Test
+    @Order(1)
     void getRequestTest() {
         ResponseEntity<Team[]> response = restTemplate
                 .getForEntity(testUrl,
@@ -45,6 +49,7 @@ public class TeamControllerTests {
     }
 
     @Test
+    @Order(2)
     void postRequestTest() {
         UUID newId = UUID.randomUUID();
         Team newGroup = new Team(newId, "team test", true);
@@ -62,6 +67,7 @@ public class TeamControllerTests {
     }
 
     @Test
+    @Order(3)
     void postRequestWithConflictTest() {
         //Test only if there are records in the database
         if (!availableTeams.isEmpty()) {
@@ -77,6 +83,7 @@ public class TeamControllerTests {
     }
 
     @Test
+    @Order(4)
     void getTeamWithIdRequestTest() {
         if (!availableTeams.isEmpty()) {
             ResponseEntity<Team> response = restTemplate.getForEntity(
@@ -88,6 +95,7 @@ public class TeamControllerTests {
     }
 
     @Test
+    @Order(4)
     void getTeamWithIdRequestFailureTest() {
         if (!availableTeams.isEmpty()) {
             ResponseEntity<Team> response = restTemplate
@@ -97,6 +105,7 @@ public class TeamControllerTests {
     }
 
     @Test
+    @Order(5)
     void updateRequestTest() {
         if (!availableTeams.isEmpty()) {
             Team toUpdate = availableTeams.getLast();
@@ -117,6 +126,7 @@ public class TeamControllerTests {
     }
 
     @Test
+    @Order(6)
     void updateRequestFailureTest() {
         if (!availableTeams.isEmpty()) {
             Team toUpdate = availableTeams.getLast();
@@ -133,6 +143,7 @@ public class TeamControllerTests {
     }
 
     @Test
+    @Order(7)
     void deleteRequestTest() {
         if (!availableTeams.isEmpty()) {
             Team toDelete = availableTeams.getLast();
