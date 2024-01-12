@@ -23,21 +23,14 @@ import org.assertj.core.api.Assertions;
 @DirtiesContext
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MemberControllerTests {
-
     TestRestTemplate restTemplate = new TestRestTemplate();
-
     @Autowired
     TeamRepository teamRepo;
-
     @Autowired
     MemberRepository memberRepo;
-
     private Team mockTeam;
-
     private List<Member> teamMockMember;
-
     private List<Member> testMembers;
-
     private String testUrl;
 
     @BeforeAll
@@ -47,20 +40,20 @@ public class MemberControllerTests {
                 "Team test",
                 true
         ));
-        testMembers = new ArrayList<Member>();
-        testMembers.add(new Member(
+        List<Member> members = new ArrayList<Member>();
+        members.add(new Member(
                 null,
                 "member 1 test name",
                 "member 1 test surname",
                 "member 1 test email"
         ));
-        testMembers.add(new Member(
+        members.add(new Member(
                 null,
                 "member 2 test name",
                 "member 2 test surname",
                 "member 2 test email"
         ));
-        teamMockMember = memberRepo.saveAll(testMembers);
+        teamMockMember = memberRepo.saveAll(members);
         testMembers = teamMockMember;
         testUrl = "http://localhost:8080/teams/" + mockTeam.getId() + "/members";
     }
@@ -171,7 +164,7 @@ public class MemberControllerTests {
     public void conclude() {
         Team databaseTeam = teamRepo.findById(mockTeam.getId()).get();
         databaseTeam.setMembers(new HashSet<>());
-        Team updatedTeam = teamRepo.save(databaseTeam);
+        teamRepo.save(databaseTeam);
         teamRepo.delete(mockTeam);
         memberRepo.deleteAll(testMembers);
     }

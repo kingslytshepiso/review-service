@@ -25,49 +25,60 @@ import tech.ioco.review.entity.Team;
 import tech.ioco.review.entity.Stakeholder;
 
 @RestController
-@RequestMapping("/groups/{groupId}/stakeholders")
+@RequestMapping("/teams/{teamId}/stakeholders")
 public class StakeholderController {
     @Autowired
-    private TeamRepository groupRepo;
+    private TeamRepository teamRepository;
 
     @Autowired
     private StakeholderRepository stakeholderRepo;
 
     @GetMapping
-    public ResponseEntity<Set<Stakeholder>> getAllStakeholders(@PathVariable("groupId") UUID id) {
-        Optional<Team> group = groupRepo.findById(id);
-        if (group.isPresent()) {
-            return ResponseEntity.ok(group.get().getStakeholders());
+    public ResponseEntity<Set<Stakeholder>> getAllStakeholders(
+            @PathVariable("teamId") UUID id) {
+        Optional<Team> team = teamRepository.findById(id);
+        if (team.isPresent()) {
+            return ResponseEntity.ok(team.get().getStakeholders());
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
     @PostMapping
-    public ResponseEntity<Void> createStakeholder(@RequestParam UUID stakeholderId,
-            @PathVariable("groupId") UUID groupId,
+    public ResponseEntity<Void> createStakeholder(
+            @PathVariable("teamId") UUID teamId,
+            @RequestBody Stakeholder stakeholder,
             UriComponentsBuilder ucb) {
-        Optional<Team> group = groupRepo.findById(stakeholderId);
-        Boolean stakeholderExists = stakeholderRepo.existsById(stakeholderId);
-        if (group.isPresent() && stakeholderExists) {
-            Optional<Stakeholder> stakeholder = stakeholderRepo.findById(stakeholderId);
-            group.get().addStakeholder(stakeholder.get());
-            URI groupLocation = ucb.path("groups/{groupId}/stakeholders")
-                    .buildAndExpand(group.get().getId()).toUri();
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isPresent()) {
+            Stakeholder savedStakeholder = stakeholderRepo.save(stakeholder);
+            Team team = teamOptional.get();
+            team.getStakeholders().add(savedStakeholder);
+            teamRepository.save(team);
+            URI groupLocation = ucb.path("teams/{teamId}/stakeholders/{stakeholderId}")
+                    .buildAndExpand(team.getId(),
+                            savedStakeholder.getId()).toUri();
             return ResponseEntity.created(groupLocation).build();
         } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return ResponseEntity.notFound().build();
         }
     }
 
     @GetMapping("/{stakeholderId}")
-    public ResponseEntity<Stakeholder> getStakeholder(@PathVariable("skakeholderId") UUID id) {
-        Optional<Stakeholder> stakeholder = stakeholderRepo.findById(id);
-        if (stakeholder.isPresent()) {
-            return ResponseEntity.ok(stakeholder.get());
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<Stakeholder> getStakeholder(
+            @PathVariable("teamId") UUID teamId,
+            @PathVariable("stakeholderId") UUID stakeholderId) {
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isPresent()) {
+            Optional<Stakeholder> optionalStakeholder = stakeholderRepo.findById(stakeholderId);
+            Boolean teamContainsStakeholder = optionalStakeholder.isPresent() ?
+                    teamOptional.get().getStakeholders().contains(optionalStakeholder.get())
+                    : false;
+            if (teamContainsStakeholder) {
+                return ResponseEntity.ok(optionalStakeholder.get());
+            }
         }
+        return ResponseEntity.notFound().build();
     }
 
     // This request assumes the processing has a connection
@@ -76,31 +87,42 @@ public class StakeholderController {
     @PutMapping("/{stakeholderId}")
     public ResponseEntity<Void> updateStakeholder(
             @PathVariable("stakeholderId") UUID stakeholderId,
-            @PathVariable("groupId") UUID groupId,
+            @PathVariable("teamId") UUID teamId,
             @RequestBody Stakeholder model) {
-        Optional<Team> group = groupRepo.findById(groupId);
-        Optional<Stakeholder> stakeholder = group.get().getStakeholders().stream().filter(
-                item -> item.getId() == stakeholderId).findFirst();
-        if (group.isPresent() && stakeholder.isPresent()) {
-            model.setId(stakeholderId);
-            group.get().updateStakeholder(model);
-            groupRepo.save(group.get());
-            // return ResponseEntity.noContent().build();
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isPresent()) {
+            Team team = teamOptional.get();
+            Optional<Stakeholder> optionalStakeholder = stakeholderRepo.findById(stakeholderId);
+            Boolean teamContainsStakeholder = optionalStakeholder.isPresent() ?
+                    team.getStakeholders().contains(optionalStakeholder.get())
+                    : false;
+            if (teamContainsStakeholder) {
+                stakeholderRepo.save(model);
+                return ResponseEntity.noContent().build();
+            }
         }
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{stakeholderId}")
     public ResponseEntity<Void> deleteStakeholder(
             @PathVariable("stakeholderId") UUID stakeholderId,
-            @PathVariable("groupId") UUID groupId) {
-        Optional<Team> group = groupRepo.findById(groupId);
-        if (group.isPresent()) {
-            group.get().removeStakeholder(stakeholderId);
+            @PathVariable("teamId") UUID teamId) {
+        Optional<Team> teamOptional = teamRepository.findById(teamId);
+        if (teamOptional.isPresent()) {
+            Team team = teamOptional.get();
+            Optional<Stakeholder> optionalStakeholder = stakeholderRepo.findById(stakeholderId);
+            Boolean teamContainsStakeholder = optionalStakeholder.isPresent() ?
+                    team.getStakeholders().contains(optionalStakeholder.get())
+                    : false;
+            if (teamContainsStakeholder) {
+                team.getStakeholders().remove(optionalStakeholder.get());
+                teamRepository.save(team);
+                stakeholderRepo.delete(optionalStakeholder.get());
+                return ResponseEntity.noContent().build();
+            }
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 
 }

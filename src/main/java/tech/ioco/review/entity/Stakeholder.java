@@ -1,6 +1,10 @@
 package tech.ioco.review.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public class Stakeholder extends Member {
@@ -13,8 +17,9 @@ public class Stakeholder extends Member {
     @Column(name = "reviewer")
     private boolean isReviewer;
 
-//    @ManyToMany(mappedBy = "stakeholders")
-//    private Set<Team> groups;
+    @JsonIgnore
+    @ManyToMany(mappedBy = "stakeholders")
+    private Set<Team> groups;
 
 //    @JoinColumn(name = "member_id", referencedColumnName = "id", insertable = false, updatable = false)
 //    @OneToOne(optional = false)
@@ -26,6 +31,14 @@ public class Stakeholder extends Member {
 
     public Stakeholder() {
     }
+
+    public Stakeholder(Member member) {
+        super(member.getId(),
+                member.getName(),
+                member.getSurname(),
+                member.getEmail());
+    }
+
     public Stakeholder(boolean staff, boolean reviewee, boolean reviewer) {
         this.isStaffMember = staff;
         this.isReviewee = reviewee;
@@ -76,6 +89,7 @@ public class Stakeholder extends Member {
     public int hashCode() {
         return super.hashCode();
     }
+
     @Override
     public boolean equals(Object object) {
 
@@ -89,5 +103,5 @@ public class Stakeholder extends Member {
     public String toString() {
         return "tech.ioco.review.Stakeholder[ memberId=" + id + " ]";
     }
-    
+
 }

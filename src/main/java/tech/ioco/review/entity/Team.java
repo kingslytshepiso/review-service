@@ -98,31 +98,6 @@ public class Team implements Serializable {
         return stakeholders;
     }
 
-    public void addStakeholder(Stakeholder stakeholder) {
-        this.stakeholders.add(stakeholder);
-    }
-
-    public void removeStakeholder(UUID id) {
-        this.stakeholders.remove(
-                stakeholders.stream()
-                        .filter(item -> item.getId() == id).findFirst().orElse(null));
-    }
-
-    public void updateStakeholder(Stakeholder updatedStakeholder) {
-        Optional<Stakeholder> stakeholder = this.stakeholders.stream().filter(
-                item -> item.getId() == updatedStakeholder.getId()).findFirst();
-        if (stakeholder.isPresent()) {
-            Iterator<Stakeholder> iterator = stakeholders.iterator();
-            if (iterator.hasNext()) {
-                Stakeholder setElement = iterator.next();
-                if (setElement.equals(stakeholder.get())) {
-                    stakeholders.remove(setElement);
-                    stakeholders.add(updatedStakeholder);
-                }
-            }
-        }
-    }
-
     public void setStakeholders(Set<Stakeholder> stakeholders) {
         this.stakeholders = stakeholders;
     }
