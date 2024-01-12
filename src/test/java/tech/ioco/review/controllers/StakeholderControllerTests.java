@@ -1,7 +1,5 @@
 package tech.ioco.review.controllers;
 
-import org.apache.coyote.Response;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,12 +9,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import tech.ioco.review.data.MemberRepository;
-import tech.ioco.review.data.StakeholderRepository;
-import tech.ioco.review.data.TeamRepository;
-import tech.ioco.review.entity.Member;
-import tech.ioco.review.entity.Stakeholder;
-import tech.ioco.review.entity.Team;
+import tech.ioco.review.data.*;
+import tech.ioco.review.entity.*;
 
 import java.util.*;
 import java.net.URI;
@@ -37,15 +31,22 @@ public class StakeholderControllerTests {
     MemberRepository memberRepo;
     @Autowired
     StakeholderRepository stakeholderRepo;
+    @Autowired
+    RoleRepository roleRepo;
+
+    @Autowired
+    OrganizationRepository orgRepo;
     private Team mockTeam;
     private List<Stakeholder> teamStakeholders;
     private List<Stakeholder> testStakeholders;
 
+    private Organisation testOrganization;
+    private Role testRole;
     private String testUrl;
 
     @BeforeEach
     public void organize() {
-        testStakeholders = stakeholderRepo.findByNameStartingWith("test");
+        testStakeholders = stakeholderRepo.findAllByNameStartingWith("Dev#test");
         mockTeam = teamRepo.findById(mockTeam.getId()).get();
     }
 
@@ -53,29 +54,38 @@ public class StakeholderControllerTests {
     public void setUp() {
         mockTeam = teamRepo.save(new Team(
                 null,
-                "Team test",
+                "Dev#test team 1",
                 true
         ));
+        testOrganization = orgRepo.save(new Organisation(null, "Dev#test iOCO Digital"));
+        testRole = roleRepo.save(new Role(null, "Dev#test 'Test Analyst'"));
         List<Member> stakeholders = new ArrayList<Member>();
         stakeholders.add(new Member(
                         null,
-                        "test 1 name",
-                        "test 1 surname",
-                        "test 1 email"
+                        "Dev#test stakeholder 1 name",
+                        "Dev#test stakeholder 1 surname",
+                        "Dev#test stakeholder 1 email"
                 )
         );
         stakeholders.add(
                 new Member(
                         null,
-                        "test 2 name",
-                        "test 2 surname",
-                        "test 2 email"
+                        "Dev#test stakeholder 2 name",
+                        "Dev#test stakeholder 2 surname",
+                        "Dev#test stakeholder 2 email"
                 )
         );
         testStakeholders = new ArrayList<>();
         stakeholders.forEach(member -> {
-            testStakeholders.add(stakeholderRepo.save(new Stakeholder(member)));
+            Stakeholder item = new Stakeholder(member);
+            item.setRole(testRole);
+            item.setOrganisation(testOrganization);
+            testStakeholders.add(item);
         });
+        Team updatedTeam = mockTeam;
+        List<Stakeholder> savedStakeholders = stakeholderRepo.saveAll(testStakeholders);
+        updatedTeam.setStakeholders(new HashSet<Stakeholder>(savedStakeholders));
+        mockTeam = teamRepo.save(updatedTeam);
         teamStakeholders = testStakeholders;
         testUrl = "http://localhost:8080/teams/" + mockTeam.getId() + "/stakeholders";
     }
@@ -106,12 +116,14 @@ public class StakeholderControllerTests {
     void postRequestTest() {
         Stakeholder entity = new Stakeholder(
                 new Member(
-                        UUID.randomUUID(),
-                        "test 3 name",
-                        "test 3 surname",
-                        "test 3 email"
+                        null,
+                        "Dev#test stakeholder 3 name",
+                        "Dev#test stakeholder 3 surname",
+                        "Dev#test stakeholder 3 email"
                 )
         );
+        entity.setOrganisation(testOrganization);
+        entity.setRole(testRole);
         ResponseEntity<Void> postResponse = restTemplate.postForEntity(
                 testUrl, entity, Void.class
         );
@@ -125,16 +137,18 @@ public class StakeholderControllerTests {
 
     @Test
     @Order(4)
-    void postStakeholderToAGroupThatDoesNotExistFailureTest() {
+    void postStakeholderToATeamThatDoesNotExistFailureTest() {
         UUID nonExistentTeamId = UUID.randomUUID();
         Stakeholder entity = new Stakeholder(
                 new Member(
-                        UUID.randomUUID(),
-                        "test 4 name",
-                        "test 4 surname",
-                        "test 4 email"
+                        null,
+                        "Dev#test stakeholder 4 name",
+                        "Dev#test stakeholder 4 surname",
+                        "Dev#test stakeholder 4 email"
                 )
         );
+        entity.setOrganisation(testOrganization);
+        entity.setRole(testRole);
         ResponseEntity<Void> response = restTemplate.postForEntity(
                 "http://localhost:8080/teams/" + nonExistentTeamId + "/stakeholders",
                 entity, Void.class
@@ -169,9 +183,9 @@ public class StakeholderControllerTests {
     @Order(6)
     void updateStakeholderRequest() {
         Stakeholder toUpdate = testStakeholders.getLast();
-        toUpdate.setName("test 3 name updated");
-        toUpdate.setSurname("test 3 surname updated");
-        toUpdate.setEmail("test 3 email updated");
+        toUpdate.setName("Dev#test stakeholder 3 name updated");
+        toUpdate.setSurname("Dev#test stakeholder 3 surname updated");
+        toUpdate.setEmail("Dev#test stakeholder 3 email updated");
         //Update properties outside of member
         toUpdate.setStaffMember(true);
         toUpdate.setReviewer(true);
@@ -199,9 +213,10 @@ public class StakeholderControllerTests {
     @Order(6)
     void updateStakeholderThatDoesNotBelongToTheSpecifiedTeamFailureTest() {
         Stakeholder toUpdate = testStakeholders.getFirst();
-        toUpdate.setName("test 1 name updated");
-        toUpdate.setSurname("test 1 surname updated");
-        toUpdate.setEmail("test 1 email updated");
+        toUpdate.setId(UUID.randomUUID());
+        toUpdate.setName("Dev#test stakeholder 1 name updated");
+        toUpdate.setSurname("Dev#test stakeholder 1 surname updated");
+        toUpdate.setEmail("Dev#test stakeholder 1email updated");
         HttpEntity<Stakeholder> httpEntity = new HttpEntity<Stakeholder>(toUpdate);
         ResponseEntity<Void> response = restTemplate.exchange(
                 URI.create(testUrl + "/" + toUpdate.getId()),
@@ -215,9 +230,9 @@ public class StakeholderControllerTests {
     void updateStakeholderFromATeamThatDoesNotExist() {
         UUID nonExistentTeamId = UUID.randomUUID();
         Stakeholder toUpdate = testStakeholders.getLast();
-        toUpdate.setName("test 3 name updated");
-        toUpdate.setSurname("test 3 surname updated");
-        toUpdate.setEmail("test 3 email updated");
+        toUpdate.setName("Dev#test stakeholder 3 name updated");
+        toUpdate.setSurname("Dev#test stakeholder 3 surname updated");
+        toUpdate.setEmail("Dev#test stakeholder 3 email updated");
         HttpEntity<Stakeholder> httpEntity = new HttpEntity<Stakeholder>(toUpdate);
         ResponseEntity<Void> response = restTemplate.exchange(
                 URI.create("http://localhost:8080/teams/" +
@@ -259,9 +274,9 @@ public class StakeholderControllerTests {
     @Test
     @Order(10)
     void deleteStakeholderNotBelongingToTheTeamInContextFailureTest() {
-        Stakeholder toDelete = testStakeholders.getFirst();
+        UUID nonExistentId = UUID.randomUUID();
         ResponseEntity<Void> deleteResponse = restTemplate.exchange(
-                URI.create(testUrl + "/" + toDelete.getId()),
+                URI.create(testUrl + "/" + nonExistentId),
                 HttpMethod.DELETE,
                 null, Void.class
         );
@@ -274,6 +289,8 @@ public class StakeholderControllerTests {
         dataBaseTeam.setStakeholders(new HashSet<>());
         teamRepo.save(dataBaseTeam);
         teamRepo.delete(dataBaseTeam);
-        stakeholderRepo.deleteAll(stakeholderRepo.findByNameStartingWith("test"));
+        stakeholderRepo.deleteAll(stakeholderRepo.findAllByNameStartingWith("Dev#test"));
+        roleRepo.deleteAllByNameStartingWith("Dev#test");
+        orgRepo.deleteAll(orgRepo.findAllByNameStartingWith("Dev#test"));
     }
 }

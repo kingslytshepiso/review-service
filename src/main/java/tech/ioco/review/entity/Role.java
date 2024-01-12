@@ -1,5 +1,6 @@
 package tech.ioco.review.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -15,6 +16,8 @@ public class Role implements Serializable {
     private UUID id;
     @Basic(optional = false)
     private String name;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "role")
     private Set<Member> members;
 

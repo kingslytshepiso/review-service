@@ -1,9 +1,7 @@
 package tech.ioco.review.controllers;
 
 import java.net.URI;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -46,14 +44,22 @@ public class MemberController {
     public ResponseEntity<Void> createMember(@PathVariable("teamId") UUID teamId,
                                              @RequestBody Member model,
                                              UriComponentsBuilder ucb) {
-        Optional<Team> team = teamRepo.findById(teamId);
-        Boolean memberExists = memberRepo.existsById(model.getId());
-        if (team.isPresent() && memberExists) {
-            Optional<Member> member = memberRepo.findById(model.getId());
-            team.get().addMember(member.get());
-            teamRepo.save(team.get());
+        Optional<Team> teamOptional = teamRepo.findById(teamId);
+        if (teamOptional.isPresent()) {
+            Team team = teamOptional.get();
+            Optional<Member> member = model.getId() != null ?
+                    memberRepo.findById(model.getId())
+                    : Optional.empty();
+            Member newMember = model;
+            Set<Member> members = team.getMembers();
+            if (member.isEmpty()) {
+                newMember = memberRepo.save(model);
+            }
+            members.add(newMember);
+            team.setMembers(members);
+            Team savedTeam = teamRepo.save(team);
             URI groupLocation = ucb.path("teams/{teamsId}/members/{memberId}")
-                    .buildAndExpand(team.get().getId(), member.get().getId()).toUri();
+                    .buildAndExpand(savedTeam.getId(), newMember.getId()).toUri();
             return ResponseEntity.created(groupLocation).build();
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();

@@ -9,8 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import tech.ioco.review.data.MemberRepository;
+import tech.ioco.review.data.RoleRepository;
 import tech.ioco.review.data.TeamRepository;
 import tech.ioco.review.entity.Member;
+import tech.ioco.review.entity.Role;
 import tech.ioco.review.entity.Team;
 
 import java.net.URI;
@@ -28,33 +30,42 @@ public class MemberControllerTests {
     TeamRepository teamRepo;
     @Autowired
     MemberRepository memberRepo;
+
+    @Autowired
+    RoleRepository roleRepo;
     private Team mockTeam;
-    private List<Member> teamMockMember;
+    private List<Member> teamMockMembers;
     private List<Member> testMembers;
+    private Role testRole;
     private String testUrl;
 
     @BeforeAll
     public void setUp() {
         mockTeam = teamRepo.save(new Team(
                 null,
-                "Team test",
+                "Dev#test team 1",
                 true
         ));
+        testRole = roleRepo.save(new Role(null, "Dev#test 'Solution Architect'"));
         List<Member> members = new ArrayList<Member>();
         members.add(new Member(
                 null,
-                "member 1 test name",
-                "member 1 test surname",
-                "member 1 test email"
+                "Dev#test member 1 name",
+                "Dev#test member 1 surname",
+                "Dev#test member 1 email"
         ));
         members.add(new Member(
                 null,
-                "member 2 test name",
-                "member 2 test surname",
-                "member 2 test email"
+                "Dev#test member 2 name",
+                "Dev#test member 2 surname",
+                "Dev#test member 2 email"
         ));
-        teamMockMember = memberRepo.saveAll(members);
-        testMembers = teamMockMember;
+        testMembers = new ArrayList<>();
+        members.forEach(member -> {
+            member.setRole(testRole);
+            testMembers.add(member);
+        });
+        teamMockMembers = memberRepo.saveAll(testMembers);
         testUrl = "http://localhost:8080/teams/" + mockTeam.getId() + "/members";
     }
 
@@ -69,8 +80,10 @@ public class MemberControllerTests {
     @Test
     @Order(2)
     void postRequestTest() throws Exception {
+        Member toAdd = teamMockMembers.getFirst();
+        toAdd.setRole(testRole);
         ResponseEntity<Void> postResponse = restTemplate.postForEntity(
-                testUrl, teamMockMember.getFirst(), Void.class
+                testUrl, toAdd, Void.class
         );
         Assertions.assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
@@ -79,8 +92,31 @@ public class MemberControllerTests {
                 Member.class
         );
         Assertions.assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(getResponse.getBody()).isEqualTo(teamMockMember.getFirst());
+        Assertions.assertThat(getResponse.getBody()).isEqualTo(teamMockMembers.getFirst());
 
+        ResponseEntity<Member[]> getAllResponse = restTemplate.getForEntity(
+                testUrl, Member[].class
+        );
+        Assertions.assertThat(getAllResponse.getBody()).contains(getResponse.getBody());
+    }
+
+    @Test
+    @Order(2)
+    void postTeamMemberThatDoesNotExistTest() {
+        Member toAdd = new Member(
+                null,
+                "Dev#test member 3 name",
+                "Dev#test member 3 surname",
+                "Dev#test member 3 email"
+        );
+        toAdd.setRole(testRole);
+        ResponseEntity<Void> postResponse = restTemplate.postForEntity(
+                testUrl, toAdd, Void.class
+        );
+        Assertions.assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        ResponseEntity<Member> getResponse = restTemplate.getForEntity(
+                postResponse.getHeaders().getLocation(), Member.class
+        );
         ResponseEntity<Member[]> getAllResponse = restTemplate.getForEntity(
                 testUrl, Member[].class
         );
@@ -90,7 +126,7 @@ public class MemberControllerTests {
     @Test
     @Order(3)
     void getTeamMemberByIdRequestTest() {
-        Member memberToGet = teamMockMember.getFirst();
+        Member memberToGet = teamMockMembers.getFirst();
         ResponseEntity<Member> response = restTemplate.getForEntity(
                 testUrl + "/" + memberToGet.getId(), Member.class
         );
@@ -101,7 +137,7 @@ public class MemberControllerTests {
     @Test
     @Order(4)
     void getTeamMemberWithANonExistentTeamTest() {
-        Member memberToGet = teamMockMember.getFirst();
+        Member memberToGet = teamMockMembers.getFirst();
         ResponseEntity<Member> response = restTemplate.getForEntity(
                 "http://localhost:8080/teams/" + UUID.randomUUID() +
                         "/" + memberToGet.getId(),
@@ -137,7 +173,7 @@ public class MemberControllerTests {
     @Test
     @Order(7)
     void deleteTeamMemberFromAGroupThatDoesNotExistRequestFailureTest() {
-        Member memberToDelete = teamMockMember.getFirst();
+        Member memberToDelete = teamMockMembers.getFirst();
         ResponseEntity<Void> response = restTemplate.exchange(
                 "http://localhost:8080/teams/" +
                         UUID.randomUUID() + "/" + memberToDelete.getId(),
@@ -149,15 +185,15 @@ public class MemberControllerTests {
     @Test
     @Order(8)
     void deleteTeamMemberRequestTest() {
-        Member toDelete = teamMockMember.getFirst();
+        Member toDelete = teamMockMembers.getFirst();
         ResponseEntity<Void> deleteResponse = restTemplate.exchange(
                 URI.create(testUrl + "/" + toDelete.getId()),
                 HttpMethod.DELETE,
                 null, Void.class
         );
-        teamMockMember = memberRepo.findByTeams(mockTeam);
+        teamMockMembers = memberRepo.findByTeams(mockTeam);
         Assertions.assertThat(deleteResponse.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-        Assertions.assertThat(teamMockMember).doesNotContain(toDelete);
+        Assertions.assertThat(teamMockMembers).doesNotContain(toDelete);
     }
 
     @AfterAll
@@ -166,6 +202,7 @@ public class MemberControllerTests {
         databaseTeam.setMembers(new HashSet<>());
         teamRepo.save(databaseTeam);
         teamRepo.delete(mockTeam);
-        memberRepo.deleteAll(testMembers);
+        memberRepo.deleteAllByNameStartingWith("Dev#test");
+        roleRepo.deleteAllByNameStartingWith("Dev#test");
     }
 }

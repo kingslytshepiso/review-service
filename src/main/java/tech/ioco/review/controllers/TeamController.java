@@ -22,7 +22,7 @@ import tech.ioco.review.data.TeamRepository;
 import tech.ioco.review.entity.Team;
 
 // The request will identify the user with the right
-// previleges to process the request
+// privileges to process the request
 @RestController
 @RequestMapping("/teams")
 public class TeamController {
@@ -38,7 +38,7 @@ public class TeamController {
     @PostMapping
     public ResponseEntity<Void> createGroup(@RequestBody Team model,
                                             UriComponentsBuilder ucb) {
-        Boolean teamExists = repo.existsByName(model.getName()) && repo.existsById(model.getId());
+        Boolean teamExists = repo.existsByName(model.getName());
         if (!teamExists) {
             Team newGroup = repo.save(model);
             URI groupLocation = ucb.path("teams/{teamId}")
@@ -81,4 +81,5 @@ public class TeamController {
         // return ResponseEntity.noContent().build();
         return ResponseEntity.noContent().build();
     }
+
 }

@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import tech.ioco.review.entity.Stakeholder;
 
 public interface StakeholderRepository extends JpaRepository<Stakeholder, UUID> {
-    List<Stakeholder> findByNameStartingWith(String value);
+    List<Stakeholder> findAllByNameStartingWith(String value);
 }

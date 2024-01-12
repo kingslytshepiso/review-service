@@ -51,17 +51,19 @@ public class TeamControllerTests {
     @Test
     @Order(2)
     void postRequestTest() {
-        UUID newId = UUID.randomUUID();
-        Team newGroup = new Team(newId, "team test", true);
+        Team newGroup = new Team(null,
+                "Dev#test team 1",
+                true);
         ResponseEntity<Void> postResponse = restTemplate
                 .postForEntity(testUrl, newGroup, Void.class);
         Assertions.assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
         if (postResponse.getStatusCode().is2xxSuccessful()) {
-            availableTeams = repo.findAll();
             ResponseEntity<Team> getResponse = restTemplate
                     .getForEntity(postResponse.getHeaders().getLocation().toString(), Team.class);
-            Assertions.assertThat(availableTeams).contains(getResponse.getBody());
+            ResponseEntity<Team[]> getAllResponse = restTemplate
+                    .getForEntity(testUrl, Team[].class);
+            Assertions.assertThat(getAllResponse.getBody()).contains(getResponse.getBody());
         }
 
     }
@@ -111,7 +113,7 @@ public class TeamControllerTests {
             Team toUpdate = availableTeams.getLast();
             Team updated = new Team(
                     toUpdate.getId(),
-                    toUpdate.getName() + 0,
+                    "Dev#test team 1 updated",
                     true
             );
             HttpEntity<Team> httpEntity = new HttpEntity<Team>(updated);
@@ -127,12 +129,12 @@ public class TeamControllerTests {
 
     @Test
     @Order(6)
-    void updateRequestFailureTest() {
+    void updateTeamThatDoesNotExistFailureTest() {
         if (!availableTeams.isEmpty()) {
             Team toUpdate = availableTeams.getLast();
             Team updated = new Team(
                     null,
-                    toUpdate.getName() + 0,
+                    "Dev#test team 1 updated",
                     true
             );
             HttpEntity<Team> httpEntity = new HttpEntity<Team>(updated);
@@ -154,5 +156,10 @@ public class TeamControllerTests {
                     .getForEntity(testUrl + "/" + toDelete.getId(), Team.class);
             Assertions.assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @AfterAll
+    public void conclude() {
+        repo.deleteAll(repo.findAllByNameStartingWith("Dev#test"));
     }
 }

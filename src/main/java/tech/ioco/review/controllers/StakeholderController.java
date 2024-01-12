@@ -51,8 +51,8 @@ public class StakeholderController {
             UriComponentsBuilder ucb) {
         Optional<Team> teamOptional = teamRepository.findById(teamId);
         if (teamOptional.isPresent()) {
-            Stakeholder savedStakeholder = stakeholderRepo.save(stakeholder);
             Team team = teamOptional.get();
+            Stakeholder savedStakeholder = stakeholderRepo.save(stakeholder);
             team.getStakeholders().add(savedStakeholder);
             teamRepository.save(team);
             URI groupLocation = ucb.path("teams/{teamId}/stakeholders/{stakeholderId}")
