@@ -63,11 +63,15 @@ public class TeamController {
     }
 
     @PutMapping("/{teamId}")
-    public ResponseEntity<Void> updateGroup(@PathVariable("teamId") UUID id,
-                                            @RequestBody Team model) {
-        Boolean teamExists = repo.existsById(id);
-        if (teamExists) {
-            repo.save(model);
+    public ResponseEntity<Void> updateGroup(
+            @PathVariable("teamId") UUID id,
+            @RequestBody Team model) {
+        Optional<Team> teamOptional = repo.findById(id);
+        if (teamOptional.isPresent()) {
+            Team toUpdate = teamOptional.get();
+            toUpdate.setName(model.getName());
+            toUpdate.setReviewer(model.isReviewer());
+            repo.save(toUpdate);
             // return ResponseEntity.noContent().build();
             return ResponseEntity.ok().build();
         } else {

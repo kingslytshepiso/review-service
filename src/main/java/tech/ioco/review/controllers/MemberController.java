@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import tech.ioco.review.data.RoleRepository;
 import tech.ioco.review.data.TeamRepository;
 import tech.ioco.review.data.MemberRepository;
+import tech.ioco.review.entity.Role;
 import tech.ioco.review.entity.Team;
 import tech.ioco.review.entity.Member;
 
@@ -28,6 +30,9 @@ public class MemberController {
 
     @Autowired
     private MemberRepository memberRepo;
+
+    @Autowired
+    private RoleRepository roleRepo;
 
     @GetMapping
     public ResponseEntity<Set<Member>> geAllMembers(
@@ -47,12 +52,21 @@ public class MemberController {
         Optional<Team> teamOptional = teamRepo.findById(teamId);
         if (teamOptional.isPresent()) {
             Team team = teamOptional.get();
+            /* An alternative is to find a member by email
+               which can eliminate the possibility of
+               duplicates
+             */
             Optional<Member> member = model.getId() != null ?
                     memberRepo.findById(model.getId())
                     : Optional.empty();
             Member newMember = model;
             Set<Member> members = team.getMembers();
-            if (member.isEmpty()) {
+            if (member.isEmpty()) {//if the member instance does not exist in the database
+                Optional<Role> roleOptional = roleRepo.findByName(model.getRole().getName());
+                if (roleOptional.isEmpty()) {//if the role instance does not exist in the database
+                    Role savedRole = roleRepo.save(model.getRole());
+                    model.setRole(savedRole);
+                }
                 newMember = memberRepo.save(model);
             }
             members.add(newMember);
@@ -106,7 +120,7 @@ public class MemberController {
                 teamRepo.save(team);
                 return ResponseEntity.noContent().build();
             }
-//            return ResponseEntity.status(HttpStatus.GONE).build();
+            //  return ResponseEntity.status(HttpStatus.GONE).build();
         }
         return ResponseEntity.notFound().build();
     }

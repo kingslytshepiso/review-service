@@ -111,19 +111,17 @@ public class TeamControllerTests {
     void updateRequestTest() {
         if (!availableTeams.isEmpty()) {
             Team toUpdate = availableTeams.getLast();
-            Team updated = new Team(
-                    toUpdate.getId(),
-                    "Dev#test team 1 updated",
-                    true
-            );
-            HttpEntity<Team> httpEntity = new HttpEntity<Team>(updated);
+            Team updated = new Team();
+            updated.setId(toUpdate.getId());
+            updated.setName("Dev#test team 1 updated");
+            updated.setReviewer(true);
+            HttpEntity<Team> httpEntity = new HttpEntity<>(updated);
+            URI updateUrl = URI.create(testUrl + "/" + updated.getId());
             ResponseEntity<Void> response = restTemplate
-                    .exchange(URI.create(testUrl + "/" + toUpdate.getId()), HttpMethod.PUT, httpEntity, Void.class);
+                    .exchange(updateUrl, HttpMethod.PUT, httpEntity, Void.class);
             Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             availableTeams = repo.findAll();
-            Assertions.assertThat(availableTeams.getLast().getId()).isEqualTo(updated.getId());
-            Assertions.assertThat(availableTeams.getLast().getName()).isEqualTo(updated.getName());
-            Assertions.assertThat(availableTeams.getLast().isReviewer()).isEqualTo(updated.isReviewer());
+            Assertions.assertThat(availableTeams.getLast()).isEqualTo(updated);
         }
     }
 

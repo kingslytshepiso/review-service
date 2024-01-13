@@ -201,7 +201,7 @@ public class MemberControllerTests {
         Team databaseTeam = teamRepo.findById(mockTeam.getId()).get();
         databaseTeam.setMembers(new HashSet<>());
         teamRepo.save(databaseTeam);
-        teamRepo.delete(mockTeam);
+        teamRepo.deleteAllByNameStartingWith("Dev#test");
         memberRepo.deleteAllByNameStartingWith("Dev#test");
         roleRepo.deleteAllByNameStartingWith("Dev#test");
     }

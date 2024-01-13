@@ -288,7 +288,7 @@ public class StakeholderControllerTests {
         Team dataBaseTeam = teamRepo.findById(mockTeam.getId()).get();
         dataBaseTeam.setStakeholders(new HashSet<>());
         teamRepo.save(dataBaseTeam);
-        teamRepo.delete(dataBaseTeam);
+        teamRepo.deleteAllByNameStartingWith("Dev#test");
         stakeholderRepo.deleteAll(stakeholderRepo.findAllByNameStartingWith("Dev#test"));
         roleRepo.deleteAllByNameStartingWith("Dev#test");
         orgRepo.deleteAll(orgRepo.findAllByNameStartingWith("Dev#test"));
