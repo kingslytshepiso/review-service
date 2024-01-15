@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import tech.ioco.review.data.RoleRepository;
-import tech.ioco.review.data.TeamRepository;
-import tech.ioco.review.data.MemberRepository;
+import tech.ioco.review.repository.RoleRepository;
+import tech.ioco.review.repository.TeamRepository;
+import tech.ioco.review.repository.MemberRepository;
 import tech.ioco.review.entity.Role;
 import tech.ioco.review.entity.Team;
 import tech.ioco.review.entity.Member;
@@ -45,6 +45,17 @@ public class MemberController {
         }
     }
 
+    public Member createMember(Member m) {
+        Optional<Role> roleOptional = m.getRole() != null ?
+                roleRepo.findByName(m.getRole().getName())
+                : Optional.empty();
+        if (roleOptional.isEmpty() && m.getRole() != null) {//if the role instance does not exist in the database
+            Role savedRole = roleRepo.save(m.getRole());
+            m.setRole(savedRole);
+        }
+        return memberRepo.save(m);
+    }
+
     @PostMapping
     public ResponseEntity<Void> createMember(@PathVariable("teamId") UUID teamId,
                                              @RequestBody Member model,
@@ -62,12 +73,7 @@ public class MemberController {
             Member newMember = model;
             Set<Member> members = team.getMembers();
             if (member.isEmpty()) {//if the member instance does not exist in the database
-                Optional<Role> roleOptional = roleRepo.findByName(model.getRole().getName());
-                if (roleOptional.isEmpty()) {//if the role instance does not exist in the database
-                    Role savedRole = roleRepo.save(model.getRole());
-                    model.setRole(savedRole);
-                }
-                newMember = memberRepo.save(model);
+                newMember = createMember(model);
             }
             members.add(newMember);
             team.setMembers(members);

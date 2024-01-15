@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,14 +14,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import tech.ioco.review.data.OrganizationRepository;
-import tech.ioco.review.data.RoleRepository;
-import tech.ioco.review.data.TeamRepository;
-import tech.ioco.review.data.StakeholderRepository;
+import tech.ioco.review.repository.OrganizationRepository;
+import tech.ioco.review.repository.RoleRepository;
+import tech.ioco.review.repository.TeamRepository;
+import tech.ioco.review.repository.StakeholderRepository;
 import tech.ioco.review.entity.Organisation;
 import tech.ioco.review.entity.Role;
 import tech.ioco.review.entity.Team;
@@ -54,6 +52,24 @@ public class StakeholderController {
         }
     }
 
+    public Stakeholder createStakeholder(Stakeholder s) {
+        Optional<Role> roleOptional = s.getRole() != null ?
+                roleRepo.findByName(s.getRole().getName())
+                : Optional.empty();
+        if (roleOptional.isEmpty() && s.getRole() != null)//if the role instance does not exist in the database
+            s.setRole(roleRepo.save(s.getRole()));
+        else
+            s.setRole(roleOptional.get());
+        Optional<Organisation> orgOptional = s.getOrganisation() != null ?
+                orgRepo.findByName(s.getOrganisation().getName())
+                : Optional.empty();
+        if (orgOptional.isEmpty() && s.getOrganisation() != null)//if the org instance does not exist in the database
+            s.setOrganisation(orgRepo.save(s.getOrganisation()));
+        else
+            s.setOrganisation(orgOptional.get());
+        return stakeholderRepo.save(s);
+    }
+
     @PostMapping
     public ResponseEntity<Void> createStakeholder(
             @PathVariable("teamId") UUID teamId,
@@ -68,17 +84,7 @@ public class StakeholderController {
             Stakeholder newStakeholder = model;
             Set<Stakeholder> stakeholders = team.getStakeholders();
             if (stakeholder.isEmpty()) {//if the stakeholder instance does not exist in the database
-                Optional<Role> roleOptional = roleRepo.findByName(model.getRole().getName());
-                if (roleOptional.isEmpty())//if the role instance does not exist in the database
-                    model.setRole(roleRepo.save(model.getRole()));
-                else
-                    model.setRole(roleOptional.get());
-                Optional<Organisation> orgOptional = orgRepo.findByName(model.getOrganisation().getName());
-                if (orgOptional.isEmpty())//if the org instance does not exist in the database
-                    model.setOrganisation(orgRepo.save(model.getOrganisation()));
-                else
-                    model.setOrganisation(orgOptional.get());
-                newStakeholder = stakeholderRepo.save(model);
+                newStakeholder = createStakeholder(model);
             }
             stakeholders.add(newStakeholder);
             team.setStakeholders(stakeholders);

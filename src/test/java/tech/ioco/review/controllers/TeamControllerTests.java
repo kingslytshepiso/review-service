@@ -10,10 +10,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.test.annotation.DirtiesContext;
-import tech.ioco.review.data.TeamRepository;
+import tech.ioco.review.repository.MemberRepository;
+import tech.ioco.review.repository.RoleRepository;
+import tech.ioco.review.repository.TeamRepository;
+import tech.ioco.review.entity.Member;
+import tech.ioco.review.entity.Role;
 import tech.ioco.review.entity.Team;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,15 +34,46 @@ public class TeamControllerTests {
     TestRestTemplate restTemplate = new TestRestTemplate();
 
     @Autowired
-    TeamRepository repo;
+    TeamRepository teamRepo;
+    @Autowired
+    MemberRepository memberRepo;
+
+    @Autowired
+    RoleRepository roleRepo;
 
     private final String testUrl = "http://localhost:8080/teams";
+    private Role testRole;
+    private List<Member> testMembers;
 
     List<Team> availableTeams;
 
-    @BeforeEach
+    @BeforeAll
     public void setUp() {
-        availableTeams = repo.findAll();
+        testRole = roleRepo.save(new Role(null, "Dev#test 'Solution Architect'"));
+        List<Member> members = new ArrayList<Member>();
+        members.add(new Member(
+                null,
+                "Dev#test member 1 name",
+                "Dev#test member 1 surname",
+                "Dev#test member 1 email"
+        ));
+        members.add(new Member(
+                null,
+                "Dev#test member 2 name",
+                "Dev#test member 2 surname",
+                "Dev#test member 2 email"
+        ));
+        testMembers = new ArrayList<>();
+        members.forEach(member -> {
+            member.setRole(testRole);
+            testMembers.add(member);
+        });
+        testMembers = memberRepo.saveAll(testMembers);
+    }
+
+    @BeforeEach
+    public void setForEach() {
+        availableTeams = teamRepo.findAll();
     }
 
     @Test
@@ -66,6 +103,53 @@ public class TeamControllerTests {
             Assertions.assertThat(getAllResponse.getBody()).contains(getResponse.getBody());
         }
 
+    }
+
+    @Test
+    @Order(2)
+    void postATeamWithMembersTest() {
+        Team newGroup = new Team(null,
+                "Dev#test team 2",
+                true);
+        newGroup.setMembers(new HashSet<>(testMembers));
+        ResponseEntity<Void> postResponse = restTemplate
+                .postForEntity(testUrl, newGroup, Void.class);
+        Assertions.assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        if (postResponse.getStatusCode().is2xxSuccessful()) {
+            ResponseEntity<Team> getResponse = restTemplate
+                    .getForEntity(postResponse.getHeaders().getLocation().toString(), Team.class);
+            ResponseEntity<Team[]> getAllResponse = restTemplate
+                    .getForEntity(testUrl, Team[].class);
+            Assertions.assertThat(getAllResponse.getBody()).contains(getResponse.getBody());
+        }
+    }
+
+    @Test
+    @Order(2)
+    void postATeamWithNonExistentTeamMembers() {
+        Team newGroup = new Team(null,
+                "Dev#test team 7",
+                true);
+        List<Member> nonExistentMembers = new ArrayList<>();
+        nonExistentMembers.add(new Member(
+                null,
+                "Dev#test non-existent member name",
+                "Dev#test non-existent member surname",
+                "Dev#test non-existent member email"
+        ));
+        newGroup.setMembers(new HashSet<>(nonExistentMembers));
+        ResponseEntity<Void> postResponse = restTemplate
+                .postForEntity(testUrl, newGroup, Void.class);
+        Assertions.assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        if (postResponse.getStatusCode().is2xxSuccessful()) {
+            ResponseEntity<Team> getResponse = restTemplate
+                    .getForEntity(postResponse.getHeaders().getLocation().toString(), Team.class);
+            ResponseEntity<Team[]> getAllResponse = restTemplate
+                    .getForEntity(testUrl, Team[].class);
+            Assertions.assertThat(getAllResponse.getBody()).contains(getResponse.getBody());
+        }
     }
 
     @Test
@@ -120,7 +204,7 @@ public class TeamControllerTests {
             ResponseEntity<Void> response = restTemplate
                     .exchange(updateUrl, HttpMethod.PUT, httpEntity, Void.class);
             Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            availableTeams = repo.findAll();
+            availableTeams = teamRepo.findAll();
             Assertions.assertThat(availableTeams.getLast()).isEqualTo(updated);
         }
     }
@@ -158,6 +242,8 @@ public class TeamControllerTests {
 
     @AfterAll
     public void conclude() {
-        repo.deleteAll(repo.findAllByNameStartingWith("Dev#test"));
+        teamRepo.deleteAll(teamRepo.findAllByNameStartingWith("Dev#test"));
+        memberRepo.deleteAllByNameStartingWith("Dev#test");
+        roleRepo.deleteAllByNameStartingWith("Dev#test");
     }
 }

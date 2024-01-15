@@ -1,5 +1,6 @@
 package tech.ioco.review.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -25,6 +26,7 @@ public class Review implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
     @ManyToMany(mappedBy = "reviews")
     private Set<Team> teams;
 

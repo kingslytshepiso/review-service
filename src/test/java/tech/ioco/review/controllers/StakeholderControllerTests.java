@@ -9,7 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import tech.ioco.review.data.*;
+import tech.ioco.review.repository.*;
 import tech.ioco.review.entity.*;
 
 import java.util.*;
@@ -190,7 +190,7 @@ public class StakeholderControllerTests {
         toUpdate.setStaffMember(true);
         toUpdate.setReviewer(true);
         toUpdate.setReviewee(true);
-        HttpEntity<Stakeholder> httpEntity = new HttpEntity<Stakeholder>(toUpdate);
+        HttpEntity<Stakeholder> httpEntity = new HttpEntity<>(toUpdate);
         ResponseEntity<Void> response = restTemplate.exchange(
                 URI.create(testUrl + "/" + toUpdate.getId()),
                 HttpMethod.PUT, httpEntity, Void.class

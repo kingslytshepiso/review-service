@@ -1,5 +1,6 @@
 package tech.ioco.review.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -24,6 +25,7 @@ public class Team implements Serializable {
             @JoinColumn(name = "team_id", referencedColumnName = "id")}, inverseJoinColumns = {
             @JoinColumn(name = "review_id", referencedColumnName = "id")})
     @ManyToMany
+    @JsonIgnore
     private Set<Review> reviews;
     @ManyToMany
     @JoinTable(name = "team_member", joinColumns = {

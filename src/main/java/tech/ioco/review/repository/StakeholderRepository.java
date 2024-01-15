@@ -1,4 +1,4 @@
-package tech.ioco.review.data;
+package tech.ioco.review.repository;
 
 import java.util.List;
 import java.util.UUID;

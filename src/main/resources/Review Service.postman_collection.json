@@ -1,0 +1,765 @@
+{
+	"info": {
+		"_postman_id": "b088023d-e6c1-43ad-943a-dd1c79bd8b20",
+		"name": "Review Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30371061"
+	},
+	"item": [
+		{
+			"name": "Team Specific Endpoints",
+			"item": [
+				{
+					"name": "get all teams",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}",
+							"host": [
+								"{{baseUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "post Team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"team created successfully\", function(){\r",
+									"    pm.response.to.have.status(201);\r",
+									"    const testItemLocation = pm.response.headers.get(\"location\");\r",
+									"    pm.collectionVariables.set(\"newTeamLocation\", testItemLocation);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": null,\r\n    \"name\": \"Dev#test team '{{$randomWord}}' from postman\",\r\n    \"reviewer\" : true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}",
+							"host": [
+								"{{baseUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "post Team With Extra data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"team created successfully\", function(){\r",
+									"    pm.response.to.have.status(201);\r",
+									"    const testItemLocation = pm.response.headers.get(\"location\");\r",
+									"    pm.collectionVariables.set(\"newTeamLocation\", testItemLocation);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": null,\r\n    \"name\": \"Dev#test team '{{$randomWord}}' from postman\",\r\n    \"reviewer\": true,\r\n    \"reviews\": [],\r\n    \"members\": [\r\n        {\r\n            \"id\": null,\r\n            \"name\": \"Dev#test {{$randomFirstName}} from postman\",\r\n            \"surname\": \"Dev#test {{$randomLastName}} from postman\",\r\n            \"email\": \"{{$randomEmail}}\",\r\n            \"role\": null\r\n        }\r\n    ],\r\n    \"stakeholders\": [\r\n        {\r\n            \"name\": \"Dev#test {{$randomFirstName}} (postman)\",\r\n            \"surname\": \"Dev#test {{$randomLastName}} (postman)\",\r\n            \"email\": \"Dev#test {{$randomEmail}} (postman)\",\r\n            \"isStaffMember\": {{$randomBoolean}},\r\n            \"isReviewee\": {{$randomBoolean}},\r\n            \"isReviewer\": {{$randomBoolean}},\r\n            \"role\": {\r\n                \"id\": null,\r\n                \"name\": \"Dev#test '{{$randomJobTitle}}' (postman)\"\r\n            },\r\n            \"organisation\": {\r\n                \"id\": null,\r\n                \"name\": \"Dev#test '{{$randomCompanyName}}' (postman)\"\r\n            }\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}",
+							"host": [
+								"{{baseUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Team",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": null,\r\n    \"name\": \"Dev#test team '{{$randomWord}}' from (postman)(!updated!)\",\r\n    \"reviewer\" : true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{newTeamLocation}}",
+							"host": [
+								"{{newTeamLocation}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get team by Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{newTeamLocation}}",
+							"host": [
+								"{{newTeamLocation}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete team",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{newTeamLocation}}",
+							"host": [
+								"{{newTeamLocation}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const postRequest = {",
+							"  url: pm.collectionVariables.get('baseUrl'),",
+							"  method: 'POST',",
+							"  header: {",
+							"    'Content-Type': 'application/json',",
+							"  },",
+							"  body: JSON.stringify({",
+							"    \"id\": null,",
+							"    \"name\": \"Dev#test team '\" + pm.variables.replaceIn(\"{{$randomWord}}\") + \"' from postman\",",
+							"    \"reviewer\" : true",
+							"  })",
+							"};",
+							"pm.sendRequest(pm.collectionVariables.get(\"baseUrl\"), function (err, getResponse) {",
+							"    const teams = Array.from(getResponse.json());",
+							"    const postmanTestObjects = teams.filter(obj => {",
+							"            return obj.name.includes(\"postman\")",
+							"            })",
+							"    if(!teams.length > 0 && !postmanTestObjects.length > 0){",
+							"        pm.sendRequest(postRequest, function (err, postResponse) {",
+							"            pm.collectionVariables.set(\"newTeamLocation\", postResponse.headers.get(\"location\"));",
+							"        });",
+							"    }",
+							"    else{",
+							"        const postmanTestObject = postmanTestObjects[0];",
+							"        const objectLocation = 'http://localhost:8080/teams/' + postmanTestObject.id;",
+							"        pm.collectionVariables.set(\"newTeamLocation\", objectLocation);",
+							"    }",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Member Specific Endpoints",
+			"item": [
+				{
+					"name": "get all members for a team",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{newTeamLocation}}/members",
+							"host": [
+								"{{newTeamLocation}}"
+							],
+							"path": [
+								"members"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "post a member for a team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Member added successfully\", function(){\r",
+									"    pm.response.to.have.status(201);\r",
+									"    pm.collectionVariables.set(\"newMemberLocation\", pm.response.headers.get(\"location\"));\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": null,\r\n    \"name\": \"Dev#test {{$randomFirstName}} (postman)\",\r\n    \"surname\": \"Dev#test {{$randomLastName}} (postman)\",\r\n    \"email\": \"{{$randomEmail}}\",\r\n    \"role\": {\r\n        \"id\": null,\r\n        \"name\": \"Dev#test AWS '{{$randomJobTitle}}' (postman)\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{newTeamLocation}}/members",
+							"host": [
+								"{{newTeamLocation}}"
+							],
+							"path": [
+								"members"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get a team member by Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{newMemberLocation}}",
+							"host": [
+								"{{newMemberLocation}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete member from a group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{newMemberLocation}}",
+							"host": [
+								"{{newMemberLocation}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const postRequest = {",
+							"  url: pm.collectionVariables.get('baseUrl'),",
+							"  method: 'POST',",
+							"  header: {",
+							"    'Content-Type': 'application/json',",
+							"  },",
+							"  body: JSON.stringify({",
+							"    \"id\": null,",
+							"    \"name\": \"Dev#test team '\" + pm.variables.replaceIn(\"{{$randomWord}}\") + \"' from postman\",",
+							"    \"reviewer\" : true",
+							"  })",
+							"};",
+							"pm.sendRequest(pm.collectionVariables.get(\"baseUrl\"), function (err, getResponse) {",
+							"    const teams = Array.from(getResponse.json());",
+							"    const postmanTestObjects = teams.filter(obj => {",
+							"            return obj.name.includes(\"postman\")",
+							"            })",
+							"    if(!teams.length > 0 && !postmanTestObjects.length > 0){",
+							"        pm.sendRequest(postRequest, function (err, postResponse) {",
+							"            pm.collectionVariables.set(\"newTeamLocation\", postResponse.headers.get(\"location\"));",
+							"        });",
+							"    }",
+							"    else{",
+							"        const postmanTestObject = postmanTestObjects[0];",
+							"        const objectLocation = 'http://localhost:8080/teams/' + postmanTestObject.id;",
+							"        pm.collectionVariables.set(\"newTeamLocation\", objectLocation);",
+							"    }",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Stakeholder Specific Endpoints",
+			"item": [
+				{
+					"name": "get all stakeholders for a team",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{newTeamLocation}}/stakeholders",
+							"host": [
+								"{{newTeamLocation}}"
+							],
+							"path": [
+								"stakeholders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "post a stakeholder to a team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Stakeholder added successfully\", function(){\r",
+									"    pm.response.to.have.status(201);\r",
+									"    pm.collectionVariables.set(\"newStakeholderLocation\", pm.response.headers.get(\"location\"));\r",
+									"\r",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": null,\r\n    \"name\": \"Dev#test {{$randomFirstName}} (postman)\",\r\n    \"surname\": \"Dev#test {{$randomLastName}} (postman)\",\r\n    \"email\": \"Dev#test {{$randomEmail}} (postman)\",\r\n    \"isStaffMember\": {{$randomBoolean}},\r\n    \"isReviewee\": {{$randomBoolean}},\r\n    \"isReviewer\": {{$randomBoolean}},\r\n    \"role\": {\r\n        \"id\": null,\r\n        \"name\": \"Dev#test '{{$randomJobTitle}}' (postman)\"\r\n    },\r\n    \"organisation\": {\r\n        \"id\": null,\r\n        \"name\": \"Dev#test '{{$randomCompanyName}}' (postman)\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{newTeamLocation}}/stakeholders",
+							"host": [
+								"{{newTeamLocation}}"
+							],
+							"path": [
+								"stakeholders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get team stakeholder by Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{newStakeholderLocation}}",
+							"host": [
+								"{{newStakeholderLocation}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update Stakeholder for a team",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": null,\r\n    \"name\": \"Dev#test {{$randomFirstName}} (postman)(!updated!)\",\r\n    \"surname\": \"Dev#test {{$randomLastName}} (postman)(!updated!)\",\r\n    \"email\": \"Dev#test {{$randomEmail}} (postman)(!updated!)\",\r\n    \"isStaffMember\": {{$randomBoolean}},\r\n    \"isReviewee\": {{$randomBoolean}},\r\n    \"isReviewer\": {{$randomBoolean}},\r\n    \"role\": {\r\n        \"id\": null,\r\n        \"name\": \"Dev#test 'National Directives Manager' (postman)\"\r\n    },\r\n    \"organisation\": {\r\n        \"id\": null,\r\n        \"name\": \"Dev#test '{{$randomCompanyName}}' (postman)\"\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{newStakeholderLocation}}",
+							"host": [
+								"{{newStakeholderLocation}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete stakeholder from a group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{newStakeholderLocation}}",
+							"host": [
+								"{{newStakeholderLocation}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const postRequest = {",
+							"  url: pm.collectionVariables.get('baseUrl'),",
+							"  method: 'POST',",
+							"  header: {",
+							"    'Content-Type': 'application/json',",
+							"  },",
+							"  body: JSON.stringify({",
+							"    \"id\": null,",
+							"    \"name\": \"Dev#test team '\" + pm.variables.replaceIn(\"{{$randomWord}}\") + \"' from postman\",",
+							"    \"reviewer\" : true",
+							"  })",
+							"};",
+							"pm.sendRequest(pm.collectionVariables.get(\"baseUrl\"), function (err, getResponse) {",
+							"    const teams = Array.from(getResponse.json());",
+							"    const postmanTestObjects = teams.filter(obj => {",
+							"            return obj.name.includes(\"postman\")",
+							"            })",
+							"    if(!teams.length > 0 && !postmanTestObjects.length > 0){",
+							"        pm.sendRequest(postRequest, function (err, postResponse) {",
+							"            pm.collectionVariables.set(\"newTeamLocation\", postResponse.headers.get(\"location\"));",
+							"        });",
+							"    }",
+							"    else{",
+							"        const postmanTestObject = postmanTestObjects[0];",
+							"        const objectLocation = 'http://localhost:8080/teams/' + postmanTestObject.id;",
+							"        pm.collectionVariables.set(\"newTeamLocation\", objectLocation);",
+							"    }",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Review Specific Endpoints",
+			"item": [
+				{
+					"name": "get all reviews",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{reviewsUrl}}",
+							"host": [
+								"{{reviewsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get reviews for a team",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{newTeamLocation}}/reviews",
+							"host": [
+								"{{newTeamLocation}}"
+							],
+							"path": [
+								"reviews"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "post a review",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.sendRequest(pm.collectionVariables.get(\"newTeamLocation\"), function(err, response){\r",
+									"    const team = response.json();\r",
+									"    pm.collectionVariables.set(\"newTeamId\", JSON.stringify(team));\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": null,\r\n    \"name\": \"Dev#test {{$randomJobDescriptor}} from (postman)\",\r\n    \"startDate\": \"2023-01-01\",\r\n    \"endDate\": \"2030-01-01\",\r\n    \"status\": \"CREATED\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{reviewsUrl}}",
+							"host": [
+								"{{reviewsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "post a review With Team",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.sendRequest(pm.collectionVariables.get(\"newTeamLocation\"), function(err, response){\r",
+									"    const team = response.json();\r",
+									"    pm.collectionVariables.set(\"newTeamId\", JSON.stringify(team));\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": null,\r\n    \"name\": \"Dev#test {{$randomJobDescriptor}} from (postman)\",\r\n    \"startDate\": \"2023-01-01\",\r\n    \"endDate\": \"2030-01-01\",\r\n    \"status\": \"CREATED\",\r\n    \"teams\":[\r\n        {{newTeamObject}}\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{reviewsUrl}}",
+							"host": [
+								"{{reviewsUrl}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update review",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{reviewsUrl}}/",
+							"host": [
+								"{{reviewsUrl}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const postRequest = {",
+							"  url: pm.collectionVariables.get('baseUrl'),",
+							"  method: 'POST',",
+							"  header: {",
+							"    'Content-Type': 'application/json',",
+							"  },",
+							"  body: JSON.stringify({",
+							"    \"id\": null,",
+							"    \"name\": \"Dev#test team '\" + pm.variables.replaceIn(\"{{$randomWord}}\") + \"' from postman\",",
+							"    \"reviewer\" : true",
+							"  })",
+							"};",
+							"pm.sendRequest(pm.collectionVariables.get(\"baseUrl\"), function (err, getResponse) {",
+							"    const teams = Array.from(getResponse.json());",
+							"    const postmanTestObjects = teams.filter(obj => {",
+							"            return obj.name.includes(\"postman\")",
+							"            })",
+							"    if(!teams.length > 0 && !postmanTestObjects.length > 0){",
+							"        pm.sendRequest(postRequest, function (err, postResponse) {",
+							"            pm.collectionVariables.set(\"newTeamLocation\", postResponse.headers.get(\"location\"));",
+							"        });",
+							"    }",
+							"    else{",
+							"        const postmanTestObject = postmanTestObjects[0];",
+							"        const objectLocation = 'http://localhost:8080/teams/' + postmanTestObject.id;",
+							"        pm.collectionVariables.set(\"newTeamLocation\", objectLocation);",
+							"    }",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "get all teams Overview",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}",
+					"host": [
+						"{{baseUrl}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/teams",
+			"type": "string"
+		},
+		{
+			"key": "newTeamLocation",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "newMemberLocation",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "newStakeholderLocation",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reviewsUrl",
+			"value": "http://localhost:8080/reviews",
+			"type": "string"
+		},
+		{
+			"key": "newTeamObject",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "newTeamId",
+			"value": ""
+		}
+	]
+}

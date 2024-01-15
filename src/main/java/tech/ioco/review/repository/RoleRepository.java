@@ -1,4 +1,4 @@
-package tech.ioco.review.data;
+package tech.ioco.review.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;

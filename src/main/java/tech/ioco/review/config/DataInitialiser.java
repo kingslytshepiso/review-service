@@ -3,7 +3,7 @@ package tech.ioco.review.config;
 import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import tech.ioco.review.data.TeamRepository;
+import tech.ioco.review.repository.TeamRepository;
 import tech.ioco.review.entity.Team;
 
 @Configuration
